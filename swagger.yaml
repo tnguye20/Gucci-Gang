@@ -1,0 +1,193 @@
+swagger: "2.0"
+info:
+  description: "Collection of APIs to upload, manage, and match clothings with specific queries by leveraging Computer Vision."
+  version: "1.0.0"
+  title: "Swagger Gucci Gang"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "tn2468@columbia.edu"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "gucci-gang.swagger.io"
+basePath: "/v1"
+tags:
+- name: "upload"
+  description: "Everything about uploading images"
+- name: "profile"
+  description: "Everything about user and general profiles"
+- name: "search"
+  description: "Everything about user query and search"
+schemes:
+- "https"
+- "http"
+paths:
+  /upload/closet:
+    put:
+      tags:
+        - "upload"
+      summary: |
+        Upload user's clothing images to S3
+      description: |
+        This API takes in the multi-part body sent to it (ex. a photo) and uploads it to an S3 bucket.
+      operationId: "uploadUser"
+      consumes:
+        - image/png
+        - image/jpg
+        - image/jpeg
+      produces:
+        - application/json
+      parameters:
+        - name: "uid"
+          in: "query"
+          type: "string"
+      responses:
+        '200':
+          description: S3 PUT operation response
+          schema:
+            type: object
+        '403':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /upload/query:
+    put:
+      tags:
+        - "upload"
+      summary: |
+        Upload random image to S3 to feed to search model
+      description: |
+        This API takes in the multi-part body sent to it (ex. a photo) and uploads it to an S3 bucket and trigger lambda with search model
+      operationId: "uploadQuery"
+      consumes:
+        - image/png
+        - image/jpg
+        - image/jpeg
+      produces:
+        - application/json
+      parameters:
+        - name: "uid"
+          in: "query"
+          type: "string"
+      responses:
+        '200':
+          description: S3 PUT operation response
+          schema:
+            type: object
+        '403':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /profile/:
+    get:
+      tags:
+        - "profile"
+      summary: |
+        Return user's informations and uploaded images/closet
+      description: |
+        This API takes the uid as an ID to query information and uploaded images regarding the user
+      operationId: "profileCloset"
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: "uid"
+          in: "query"
+          type: "string"
+      responses:
+        '200':
+          description: User Information
+          schema:
+            $ref: '#/definitions/UserProfile'
+        '403':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /search:
+    post:
+      tags:
+        - "search"
+      summary: |
+        Accepting user's choice of images and find matching items from your closet
+      description: |
+        This API accepts an array of image ids the user selected to query matching item in the user closet matching said images 
+      parameters:
+        - name: "iids"
+          in: "query"
+          type: "array"
+          items:
+            type: "string"
+        - name: "uid"
+          in: "query"
+          type: "string"
+      responses:
+        '200':
+          description: User Information
+          schema:
+            $ref: '#/definitions/Images'
+        '403':
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/Error'
+        '500':
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+definitions:
+  EmptyResponse:
+    type: object
+    
+  Image:
+    type: object
+    properties:
+      uid:
+        type: string
+      url:
+        type: string
+        
+  Images:
+    type: array
+    items:
+      type: object
+      properties:
+        images:
+          type: array
+          items:
+            $ref: "#/definitions/Image"
+            
+  UserProfile:
+    type: object
+    properties:
+      uid:
+        type: string
+      info:
+        type: object
+      images:
+        $ref: "#/definitions/Images"
+        
+         
+  Error:
+    type: object
+    properties:
+      code:
+        type: integer
+        format: int32
+      message:
+        type: string
+        
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"
